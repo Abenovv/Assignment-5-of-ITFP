@@ -6,7 +6,9 @@
       "Program.cs",
       "Tests/InputTests.cs",
       "Domain/TaskSelection.cs",
-      "Tests/SelectionTests.cs"
+      "Tests/SelectionTests.cs",
+      "Domain/Result.cs",
+      "Tests/ResultTests.cs"
     ],
     "member2": [
       "Domain/TaskScoring.cs",
@@ -22,7 +24,9 @@
       "Domain/Models.cs",
       "Input/TaskParser.cs",
       "Program.cs",
-      "Tests/InputTests.cs"
+      "Tests/InputTests.cs",
+      "Domain/Result.cs",
+      "Tests/ResultTests.cs"
     ],
     "member2": [
       "Domain/TaskSelection.cs",
@@ -42,7 +46,9 @@
       "Domain/Models.cs",
       "Input/TaskParser.cs",
       "Program.cs",
-      "Tests/InputTests.cs"
+      "Tests/InputTests.cs",
+      "Domain/Result.cs",
+      "Tests/ResultTests.cs"
     ],
     "member2": [
       "Domain/TaskSelection.cs",

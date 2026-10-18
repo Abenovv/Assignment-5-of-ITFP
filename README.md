@@ -2,7 +2,7 @@
 
 **Team:** Yerkebulan Abenov, Nurbergen Assan, Amanalina Tumargul and Khalid Ahmad Ahmadi — all IT-2511.
 
-**Team size:** 4 students. Two- and three-member alternatives are in `handoff/TEAM.md`.
+**Team size:** 4 students.
 
 **Repository:** [Abenovv/Assignment-5-of-ITFP](https://github.com/Abenovv/Assignment-5-of-ITFP)
 
@@ -142,11 +142,43 @@ An invalid command-line date, policy or minimum importance also exits with code 
 | Higher-order function and two policies | `ScoreTasks` and `Domain/ScoringPolicies.cs`; selection in `Program.Main` |
 | Pure calculations and separate I/O | `Domain/` contains calculations; `Program.cs` reads files and displays completed results |
 | Automated assertions | `Tests/InputTests.cs`, `SelectionTests.cs`, `ScoringTests.cs`, `PlanTests.cs`; `Tests/Program.cs` runs assertions and exits nonzero on failure |
+| Map and Bind with failure skipping | `Domain/Result.cs`, `TaskParser.Parse`, the normal CLI and `Tests/ResultTests.cs` |
 | Runnable submission | `DailyPlanner.sln`, both `.csproj` files, sources and sample files |
+
+## Map, Bind and stopping after failure
+
+The CLI reads the file into `Result<string>`, calls `.Bind(TaskParser.Parse)` and
+then `.Map(...)` to build the selected policy plans. File access stays in
+`Program.cs`; parsing stays in `Input/TaskParser.cs`; the three pure domain stages
+are unchanged.
+
+`Map` accepts a function returning an ordinary value: `T -> U`. On success it
+runs that function and wraps its value in `Result<U>`. `Bind` accepts a function
+returning another result: `T -> Result<U>`. It returns that result directly, so a
+failed parser does not produce a nested result or a partial plan. Neither method
+runs its callback on failure; both preserve the original error. They handle
+expected failures explicitly; they do not catch arbitrary programming errors.
+
+```csharp
+var minutes = Result<string>.Ok(json)
+    .Bind(TaskParser.Parse)
+    .Map(tasks => TaskPipeline.CreatePlan(tasks, date, 3, ScoringPolicies.ImportanceFirst))
+    .Map(plan => plan.TotalMinutes);
+```
+
+For valid sample data this produces `Success(120)`. For `samples/invalid.json`,
+parsing fails and neither planning nor scoring runs. `ResultTests.cs` proves this
+with callback counters that stay at zero. It also checks a file-read failure
+skips parsing and planning, and a failed bind skips subsequent binds and maps.
+
+For the defense, run the normal sample and `samples/invalid.json`, then show the
+four result tests. A small change to practise is making the short-task bonus
+start at 45 minutes: change its policy, calculate the new order and scores, and
+update the affected assertions before rebuilding.
 
 ## Tests
 
-The runner has 17 tests. The assertions cover:
+The runner has 21 tests. The assertions cover:
 
 | Test | Expected result |
 | --- | --- |
@@ -168,7 +200,7 @@ The runner has 17 tests. The assertions cover:
 | Tie order | Equal scores are ordered by ID, even if input order differs |
 | Invalid threshold | Minimum importance outside 1–5 throws a clear argument exception |
 
-Latest verification, October 18, 2026: build succeeded with 0 warnings and 0 errors; **17/17 tests passed**. Both default policy outputs matched the expected results above. Ten additional command-line checks passed: empty input, the five failure samples, invalid date, invalid policy, invalid threshold, and the threshold-4 plan.
+Latest verification, October 18, 2026: build succeeded with 0 warnings and 0 errors; **21/21 tests passed**. Both default policy outputs matched the expected results above. Ten additional command-line checks passed: empty input, the five failure samples, invalid date, invalid policy, invalid threshold, and the threshold-4 plan.
 
 ## Contribution and defense notes
 
@@ -176,12 +208,10 @@ The project continues Yerkebulan's existing Assignment 5 daily planner. The prep
 
 | Member | Logic to review and develop | Tests to own |
 | --- | --- | --- |
-| Yerkebulan Abenov, IT-2511 | Input validation, immutable models and CLI | `InputTests.cs` |
+| Yerkebulan Abenov, IT-2511 | Input validation, immutable models, CLI and Result composition | `InputTests.cs`, `ResultTests.cs` |
 | Nurbergen Assan, IT-2511 | Task selection and importance threshold | `SelectionTests.cs` |
 | Amanalina Tumargul, IT-2511 | Scoring policies and delegate-based scoring | `ScoringTests.cs` |
 | Khalid Ahmad Ahmadi, IT-2511 | Ranking, plan construction and pipeline composition | `PlanTests.cs` |
-
-Use case `4` in `handoff/ownership.json` and the `team-4` packages. `handoff/TEAM.md` also keeps the two- and three-person alternatives. The personal bundle's `START_HERE.md` gives the Git steps for both assignments.
 
 For the defense, trace T3: its raw JSON is validated into a `TaskItem`; selection keeps it at importance 3; scoring produces a `ScoredTask` with 30 or 80; ranking creates a `RankedTask` at position 4 or 1 inside a `DailyPlan`. Point to `scorePolicy(task)` to show where the passed function runs.
 
